@@ -1,4 +1,11 @@
+import threading
+
 import ray
+
+
+class Node:
+    def __init__(self):
+        pass
 
 
 @ray.remote
@@ -14,7 +21,7 @@ class Mapper:
         coordinator = ray.get_actor(self.coordinator_name)
 
         while True:
-            data = ray.get(coordinator.get_mapper_input.remote())
+            data = ray.get(coordinator.mapper_input.remote())
 
             if data:
                 output = self.mapper(data)
@@ -55,7 +62,7 @@ class Reducer:
         coordinator.register_reducer.remote()
         self.done = True
 
-    def update_auto_scaler(self):
+    def update_auto_scaler_state(self):
         pass
 
     def done(self):

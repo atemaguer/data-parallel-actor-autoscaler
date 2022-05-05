@@ -33,7 +33,7 @@ alphabet = [
     "x",
     "y",
     "z",
-] * 1000
+] * 10
 
 
 def map_func(input):
@@ -51,10 +51,10 @@ for (num_mappers, reducers) in [(2, 4), (4, 4), (4, 6), (4, 10)]:
     )
     coord.run.remote()
 
-    while ray.get(coord.get_current_state.remote()) != "done":
+    while ray.get([coord.current_state.remote()]) != "done":
         time.sleep(1)
 
     print(f"Experiment using {num_mappers} mappers and {reducers} reducers: \n")
-    print(f"Running time is: {ray.get(coord.get_running_time.remote())}")
+    print(f"Running time is: {ray.get(coord.running_time.remote())}")
 
     ray.kill(coord)

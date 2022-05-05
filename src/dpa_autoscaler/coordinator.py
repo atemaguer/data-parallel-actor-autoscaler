@@ -77,13 +77,13 @@ class MapReduceCoordinator:
             self.done_reducers = 0
             self.done_mappers = 0
 
-    def get_mapper_input(self):
+    def mapper_input(self):
         if len(self.input_data) > 0:
             return self.input_data.pop(0)
         return None
 
-    def get_running_time(self):
+    def running_time(self):
         return self.running_time
 
-    def get_current_state(self):
+    def current_state(self):
         return self.current_state
