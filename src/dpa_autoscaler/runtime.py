@@ -23,14 +23,17 @@ class Mapper:
         while True:
             data = ray.get(coordinator.mapper_input.remote())
 
-            if data:
+            if data is not None:
                 output = self.mapper(data)
                 idx = hash(output) % len(self.reducer_queues)
                 self.reducer_queues[idx].put(output)
-
             else:
                 break
-        coordinator.register_mapper.remote()
+
+        for reducer_queue in self.reducer_queues:
+            reducer_queue.put(None)
+
+        # coordinator.register_mapper.remote()
         self.done = True
 
     def done(self):
@@ -52,8 +55,10 @@ class Reducer:
     def process(self):
         coordinator = ray.get_actor(self.coordinator_name)
 
-        while not self.input_queue.empty():
+        while True:
             data = self.input_queue.get()
+            if data is None:
+                break
             output = self.reducer(data)
             self.output_queue.put(output)
 

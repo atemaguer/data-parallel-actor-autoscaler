@@ -28,13 +28,15 @@ class MapReduceCoordinator:
         self.reducers = []
         self.reducer_queues = []
 
-        self.current_state = "not_started"
+        self.finished = False
 
         self.output_queue = output_queue
 
         for i in range(self.num_reducers):
             input_queue = Queue()
+
             self.reducer_queues.append(input_queue)
+
             self.reducers.append(
                 Reducer.remote(
                     self.reducer,
@@ -47,7 +49,7 @@ class MapReduceCoordinator:
 
         self.mappers = [
             Mapper.remote(
-                self.mapper, f"reducer-{i}", "coordinator", self.reducer_queues
+                self.mapper, f"mapper-{i}", "coordinator", self.reducer_queues
             )
             for i in range(self.num_mappers)
         ]
@@ -58,24 +60,25 @@ class MapReduceCoordinator:
         for mapper in self.mappers:
             mapper.process.remote()
 
-        self.current_state = "mapping"
+        for reducer in self.reducers:
+            reducer.process.remote()
 
     def register_mapper(self):
-        self.done_mappers += 1
+        pass
+        # self.done_mappers += 1
 
-        if self.done_mappers == self.num_mappers:
-            for reducer in self.reducers:
-                reducer.process.remote()
-            self.current_state = "reducing"
+        # if self.done_mappers == self.num_mappers:
+        #     for reducer in self.reducers:
+        #         reducer.process.remote()
+        # self.current_state = "reducing"
 
     def register_reducer(self):
         self.done_reducers += 1
         if self.done_reducers == self.num_reducers:
             self.running_time = time.perf_counter() - self.start_time
 
-            self.current_state = "done"
+            self.finished = True
             self.done_reducers = 0
-            self.done_mappers = 0
 
     def mapper_input(self):
         if len(self.input_data) > 0:
@@ -85,5 +88,5 @@ class MapReduceCoordinator:
     def running_time(self):
         return self.running_time
 
-    def current_state(self):
-        return self.current_state
+    def is_done(self):
+        return self.finished
