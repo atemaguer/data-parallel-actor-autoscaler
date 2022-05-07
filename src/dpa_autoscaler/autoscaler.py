@@ -1,10 +1,15 @@
 import ray
 
 
+class AutoScalingPolicy:
+    def __init__(self, *args):
+        pass
+
+
 @ray.remote
 class AutoScaler:
     def __init__(self, *args):
-        pass
+        self.actor_state = {}
 
     def update_actor_state(self, actor_id, *args):
         pass
