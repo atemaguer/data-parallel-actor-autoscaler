@@ -79,9 +79,11 @@ class Reducer:
         self.done = True
 
     def update_auto_scaler_state(self):
-        autoscaler = ray.get_actor("autoscaler")
-        autoscaler.update_actor_state.remote(self.name, self.input_queue.size())
-        time.sleep(1)
+        while True:
+            print("update:", self.input_queue.size())
+            autoscaler = ray.get_actor("autoscaler")
+            autoscaler.update_actor_state.remote(self.name, self.input_queue.size())
+            time.sleep(0.1)
 
     def done(self):
         return self.done
