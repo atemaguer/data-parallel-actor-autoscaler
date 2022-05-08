@@ -1,4 +1,5 @@
 import threading
+import time
 
 import ray
 
@@ -33,7 +34,6 @@ class Mapper:
         for reducer_queue in self.reducer_queues:
             reducer_queue.put(None)
 
-        # coordinator.register_mapper.remote()
         self.done = True
 
     def done(self):
@@ -52,6 +52,12 @@ class Reducer:
         self.coordinator_name = coordinator_name
         self.done = False
 
+        self.autoscaler_updater = threading.Thread(
+            target=self.update_auto_scaler_state, args=()
+        )
+
+        self.autoscaler_updater.start()
+
     def process(self):
         coordinator = ray.get_actor(self.coordinator_name)
 
@@ -60,6 +66,7 @@ class Reducer:
             if data is None:
                 break
             output = self.reducer(data)
+
             self.output_queue.put(output)
 
         self.input_queue.shutdown()
@@ -68,7 +75,9 @@ class Reducer:
         self.done = True
 
     def update_auto_scaler_state(self):
-        pass
+        autoscaler = ray.get_actor("autoscaler")
+        autoscaler.update_actor_state.remote(self.name, self.input_queue.size())
+        time.sleep(1)
 
     def done(self):
         return self.done

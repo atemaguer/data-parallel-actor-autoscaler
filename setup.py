@@ -19,6 +19,7 @@ setup(
         "ray==1.11.0",
         "mmh3",
         "pandas",
+        "pytest",
     ],  # add any additional packages that
     license="https://www.mit.edu/~amini/LICENSE.md",
     keywords=["python", "ray", "data-parallel actors"],
