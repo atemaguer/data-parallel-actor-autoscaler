@@ -59,9 +59,14 @@ class Reducer:
             data = self.input_queue.get()
             if data is None:
                 break
-            output = self.reducer(data)
-            self.output_queue.put(output)
+            output = self.reducer.execute(data)
+            if output is not None:
+                self.output_queue.put(output)
 
+        output = self.reducer.done()
+        if output is not None:
+            self.output_queue.put(output)
+        
         self.input_queue.shutdown()
 
         coordinator.register_reducer.remote()
