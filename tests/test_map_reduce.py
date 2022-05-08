@@ -5,25 +5,9 @@ from ray.util.queue import Queue
 
 from dpa_autoscaler.coordinator import MapReduceCoordinator
 from dpa_autoscaler.config import data
-from dpa_autoscaler.executors import map_func, reduce_func
+from dpa_autoscaler.executors import map_func, reducer
 
 ray.init(address="auto", ignore_reinit_error=True)
-
-def map_func(input):
-    return input
-
-class reducer():
-    def __init__(self):
-        self.state = {}
-    def execute(self,element):
-        if element in self.state:
-            self.state[element] += 1
-        else:
-            self.state[element] = 1
-    def done(self):
-        print(self.state)
-        return self.state
-
 
 print("Running experiments:")
 
