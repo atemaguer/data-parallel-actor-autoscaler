@@ -38,7 +38,7 @@ class MapReduceCoordinator:
             self.reducer_queues.append(input_queue)
 
             self.reducers.append(
-                Reducer.remote(
+                Reducer.options(max_concurrency = 2).remote(
                     self.reducer,
                     f"reducer-{i}",
                     "coordinator",
