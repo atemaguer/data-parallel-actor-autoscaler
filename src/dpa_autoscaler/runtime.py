@@ -43,20 +43,31 @@ class Mapper:
 @ray.remote
 class Reducer:
     def __init__(
-        self, reducer, name, coordinator_name, input_queue, output_queue, *args
+        self,
+        reducer,
+        name,
+        coordinator_name,
+        input_queue,
+        output_queue,
+        autoscale=False,
+        *args,
     ):
         self.reducer = reducer
         self.name = name
         self.input_queue = input_queue
         self.output_queue = output_queue
         self.coordinator_name = coordinator_name
+        self.autoscale = autoscale
         self.done = False
 
-        self.autoscaler_updater = threading.Thread(
-            target=self.update_auto_scaler_state, args=()
-        )
+        if self.autoscale:
 
-        self.autoscaler_updater.start()
+            self.autoscaler = ray.get_actor("autoscaler")
+            self.autoscaler_updater = threading.Thread(
+                target=self.update_auto_scaler_state, args=()
+            )
+
+            self.autoscaler_updater.start()
 
     def process(self):
         coordinator = ray.get_actor(self.coordinator_name)
@@ -72,7 +83,7 @@ class Reducer:
         output = self.reducer.done()
         if output is not None:
             self.output_queue.put(output)
-        
+
         self.input_queue.shutdown()
 
         coordinator.register_reducer.remote()
@@ -80,9 +91,9 @@ class Reducer:
 
     def update_auto_scaler_state(self):
         while True:
-            print("update:", self.input_queue.size())
-            autoscaler = ray.get_actor("autoscaler")
-            autoscaler.update_actor_state.remote(self.name, self.input_queue.size())
+            self.autoscaler.update_actor_state.remote(
+                self.name, self.input_queue.size()
+            )
             time.sleep(0.1)
 
     def done(self):
