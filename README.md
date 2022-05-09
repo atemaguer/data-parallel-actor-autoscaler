@@ -1,3 +1,3 @@
-# data-parallel-actor-autoscaler
+# DPA Autoscaler
 
-A ray-based runtime that autoscales actors in a data parallel system
+DPA Autoscaler is ray-based runtime that autoscales actors in a data parallel batch streaming system.
