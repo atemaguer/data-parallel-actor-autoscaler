@@ -1,5 +1,5 @@
 # consistent hashing
-mmh3_hash_seed = 0
+MMH3_HASH_SEED = 0
 
 NUM_REPEATS = 100
 
