@@ -35,3 +35,9 @@ class TestConsistentHashing(unittest.TestCase):
         ch.remove_last_node()
         assert ch.nodes == 1
         self._stats(ch)
+
+    def test_ch_halving(self):
+        ch = ConsistentHashing(nodes=3)
+        self._stats(ch)
+        ch.halve_node_tokens(node_idx=1)
+        self._stats(ch)

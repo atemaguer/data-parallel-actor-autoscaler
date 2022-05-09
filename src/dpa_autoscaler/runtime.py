@@ -72,7 +72,7 @@ class Reducer:
         output = self.reducer.done()
         if output is not None:
             self.output_queue.put(output)
-        
+
         self.input_queue.shutdown()
 
         coordinator.register_reducer.remote()

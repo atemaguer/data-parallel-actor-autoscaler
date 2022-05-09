@@ -56,6 +56,22 @@ class ConsistentHashing:
         self._update_node_tokens(node_idx=node_idx, tokens=tokens)
         self._update_hashes()
 
+    def halve_node_tokens(self, node_idx: int) -> None:
+        """
+        This is a convenience method to halve the tokens for a given node index.
+        If an overwhelmed node is detected you can use this method to unburden the node,
+        which is more convenient than bumping the tokens for all the other nodes.
+        What does it actually do? It doubles the tokens for all nodes except for `node_idx`.
+
+        This approach will lead to some unnecessary churn.
+        We'll introduce a lot of "virtual nodes" which may result in some shuffling of keys between nodes.
+        """
+        node_tokens = {
+            idx: (1 if idx == node_idx else 2) * tokens
+            for idx, tokens in self.node_tokens.items()
+        }
+        self.update_batch(node_tokens=node_tokens)
+
     def add_node(self, tokens: int) -> None:
         """
         Append a new node.
