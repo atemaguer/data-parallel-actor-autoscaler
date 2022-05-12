@@ -17,7 +17,12 @@ class ConsistentHashing:
     - Can add/remove nodes to/from the back of the list of nodes.
     """
 
-    def __init__(self, nodes: int, seed: int = config.MMH3_HASH_SEED):
+    def __init__(
+        self,
+        nodes: int,
+        seed: int = config.MMH3_HASH_SEED,
+        tokens_initial: int = config.TOKENS_INITIAL,
+    ):
         """
         Initialize consistent hashing.
         :param nodes: int number of nodes for initializing the ring. must be >= 1.
@@ -30,8 +35,12 @@ class ConsistentHashing:
 
         self.nodes = nodes
         self.seed = seed
-        self.node_tokens = {idx: 1 for idx in range(self.nodes)}
+        self.tokens_initial = tokens_initial
         self.token_hashes = {}
+        self._initialize_tokens()
+
+    def _initialize_tokens(self) -> None:
+        self.node_tokens = {idx: self.tokens_initial for idx in range(self.nodes)}
         self._update_hashes()
 
     def key_lookup(self, key: str) -> int:
@@ -46,6 +55,17 @@ class ConsistentHashing:
             if key_hash > max(self.token_hashes.values())
             else self._closest_node_after_key(key_hash=key_hash)
         )
+
+    def halve_tokens_for_node(self, node_idx: int) -> bool:
+        if all(t == 1 for t in self.token_hashes.values()):
+            self._initialize_tokens()
+
+        if self.node_tokens[node_idx] > 1:
+            self.update(node_idx=node_idx, tokens=self.node_tokens[node_idx] >> 1)
+            return True
+        else:
+            print(f"can't halve the tokens for node index {node_idx}")
+            return False
 
     def update(self, node_idx: int, tokens: int) -> None:
         """
