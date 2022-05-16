@@ -17,7 +17,7 @@ class ConsistentHashing:
     - Can add/remove nodes to/from the back of the list of nodes.
     """
 
-    def __init__(self, nodes: int, seed: int = config.mmh3_hash_seed):
+    def __init__(self, nodes: int, seed: int = config.MMH3_HASH_SEED):
         """
         Initialize consistent hashing.
         :param nodes: int number of nodes for initializing the ring. must be >= 1.
