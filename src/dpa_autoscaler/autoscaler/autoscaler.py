@@ -1,4 +1,5 @@
 import ray
+from dpa_autoscaler.allocation import ConsistentHashing
 
 
 class AutoScalingPolicy:
@@ -8,17 +9,25 @@ class AutoScalingPolicy:
 
 @ray.remote
 class AutoScaler:
-    def __init__(self, *args):
-        self.actor_state = {}
+    def __init__(self, num_reducers, *args):
+        self.reducer_state = {}
+        self.reducer_ids = []
+        self.mapper_ids = []
+        self.ch = ConsistentHashing(nodes=num_reducers)
         self.threshold = 100
 
-    def update_actor_state(self, actor_id, state, *args):
-        self.actor_state[actor_id] = state
+    def register_reducer(self, reducer_id, *args):
+        if reducer_id not in self.reducer_ids:
+            self.reducer_ids.append(reducer_id)
 
-    def register_actor(self, actor_id, *args):
-        pass
+    def register_mapper(self, mapper_id, *args):
+        if mapper_id not in self.mapper_ids:
+            self.mapper_ids.append(mapper_id)
 
-    def autoscale(self, actor_id, *args):
+    def update_reducer_state(self, reducer_id, state, *args):
+        self.reducer_state[reducer_id] = state
+
+    def autoscale(self, reducer_id, *args):
         pass
 
     def autoscaler_state(self):

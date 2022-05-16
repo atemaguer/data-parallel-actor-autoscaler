@@ -3,6 +3,8 @@ import time
 
 import ray
 
+from dpa_autoscaler.allocation import ConsistentHashing
+
 
 class Node:
     def __init__(self):
@@ -11,12 +13,20 @@ class Node:
 
 @ray.remote
 class Mapper:
-    def __init__(self, mapper, name, coordinator_name, reducer_queues, *args):
+    def __init__(
+        self, mapper, name, coordinator_name, reducer_queues, autoscale=False * args
+    ):
         self.mapper = mapper
         self.name = name
         self.reducer_queues = reducer_queues
         self.coordinator_name = coordinator_name
         self.done = False
+        self.ch = ConsistentHashing(nodes=len(self.reducer_queues))
+        self.autoscale = autoscale
+
+        if self.autoscale:
+            autoscaler = ray.get_actor("autoscaler")
+            autoscaler.register_mapper.remote(self.name)
 
     def process(self):
         coordinator = ray.get_actor(self.coordinator_name)
@@ -35,6 +45,9 @@ class Mapper:
             reducer_queue.put(None)
 
         self.done = True
+
+    def reschedule_output(self, node_idx, num_tokens):
+        self.ch.update(node_idx, num_tokens)
 
     def done(self):
         return self.done
@@ -63,6 +76,8 @@ class Reducer:
         if self.autoscale:
 
             self.autoscaler = ray.get_actor("autoscaler")
+            self.autoscaler.register_reducer.remote(self.name)
+
             self.autoscaler_updater = threading.Thread(
                 target=self.update_auto_scaler_state, args=()
             )
@@ -91,7 +106,7 @@ class Reducer:
 
     def update_auto_scaler_state(self):
         while True:
-            self.autoscaler.update_actor_state.remote(
+            self.autoscaler.update_reducer_state.remote(
                 self.name, self.input_queue.size()
             )
             time.sleep(0.1)

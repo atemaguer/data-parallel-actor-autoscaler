@@ -22,13 +22,7 @@ coord = MapReduceCoordinator.options(name="coordinator").remote(
 
 ray.get(coord.run.remote())
 
-# while True:
-#     try:
-#         autoscaler = ray.get_actor("autoscaler")
-#         break
-#     except:
-#         pass
-
 while not ray.get(coord.is_done.remote()):
+    autoscaler = ray.get_actor("autoscaler")
     print(ray.get(autoscaler.autoscaler_state.remote()))
     time.sleep(5)

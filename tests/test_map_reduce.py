@@ -7,7 +7,7 @@ from dpa_autoscaler.coordinator import MapReduceCoordinator
 from dpa_autoscaler.config import data
 from dpa_autoscaler.executors import map_func, reducer
 
-ray.init(address="auto", ignore_reinit_error=True)
+ray.init(ignore_reinit_error=True)
 
 print("Running experiments:")
 
