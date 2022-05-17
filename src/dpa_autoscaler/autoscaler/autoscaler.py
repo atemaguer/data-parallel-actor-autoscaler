@@ -26,9 +26,10 @@ class AutoScaler:
 
     def update_reducer_state(self, reducer_id, state, *args):
         self.reducer_state[reducer_id] = state
+        print(self.reducer_state)
 
     def autoscale(self, reducer_id, *args):
         pass
 
     def autoscaler_state(self):
-        return self.actor_state
+        return (self.actor_state, self.reducer_ids, self.mapper_ids)

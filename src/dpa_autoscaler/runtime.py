@@ -14,7 +14,7 @@ class Node:
 @ray.remote
 class Mapper:
     def __init__(
-        self, mapper, name, coordinator_name, reducer_queues, autoscale=False * args
+        self, mapper, name, coordinator_name, reducer_queues, autoscale=False, *args
     ):
         self.mapper = mapper
         self.name = name
@@ -36,7 +36,9 @@ class Mapper:
 
             if data is not None:
                 output = self.mapper(data)
-                idx = hash(output) % len(self.reducer_queues)
+                idx = self.ch.key_lookup(
+                    output
+                )  # hash(output) % len(self.reducer_queues)
                 self.reducer_queues[idx].put(output)
             else:
                 break

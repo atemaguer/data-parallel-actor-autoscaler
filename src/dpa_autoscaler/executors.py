@@ -22,5 +22,5 @@ class reducer:
             self.state[element] = 1
 
     def done(self):
-        print(self.state)
+        # print(self.state)
         return self.state

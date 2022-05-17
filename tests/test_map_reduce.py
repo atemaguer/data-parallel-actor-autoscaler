@@ -11,9 +11,10 @@ ray.init(ignore_reinit_error=True)
 
 print("Running experiments:")
 
-for (num_mappers, reducers) in [(2, 4), (4, 4), (4, 6), (4, 10)]:
+for (num_mappers, reducers) in [(4, 10)]:
     out_queue = Queue()
     reduce_func = reducer()
+
     coord = MapReduceCoordinator.options(name="coordinator").remote(
         data, num_mappers, reducers, map_func, reduce_func, out_queue
     )

@@ -58,21 +58,28 @@ class MapReduceCoordinator:
                     "coordinator",
                     input_queue,
                     self.output_queue,
+                    autoscale=self.autoscale,
                 )
             )
 
         mappers = [
-            Mapper.remote(self.mapper, f"mapper-{i}", "coordinator", reducer_queues)
+            Mapper.remote(
+                self.mapper,
+                f"mapper-{i}",
+                "coordinator",
+                reducer_queues,
+                autoscale=self.autoscale,
+            )
             for i in range(self.num_mappers)
         ]
 
         self.start_time = time.perf_counter()
 
-        for mapper in mappers:
-            mapper.process.remote()
-
         for reducer in reducers:
             reducer.process.remote()
+
+        for mapper in mappers:
+            mapper.process.remote()
 
     def register_reducer(self):
         self.done_reducers += 1

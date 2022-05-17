@@ -10,8 +10,8 @@ from dpa_autoscaler.autoscaler import AutoScaler
 
 ray.init(ignore_reinit_error=True)
 
-NUM_MAPPERS = 2
-NUM_REDUCERS = 4
+NUM_MAPPERS = 4
+NUM_REDUCERS = 10
 
 out_queue = Queue()
 reduce_func = reducer()
@@ -22,7 +22,9 @@ coord = MapReduceCoordinator.options(name="coordinator").remote(
 
 ray.get(coord.run.remote())
 
+autoscaler = ray.get_actor("autoscaler")
+
 while not ray.get(coord.is_done.remote()):
-    autoscaler = ray.get_actor("autoscaler")
-    print(ray.get(autoscaler.autoscaler_state.remote()))
     time.sleep(5)
+
+print(ray.get(autoscaler.autoscaler_state.remote()))
