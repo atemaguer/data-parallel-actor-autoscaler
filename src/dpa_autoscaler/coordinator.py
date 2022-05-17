@@ -50,7 +50,7 @@ class MapReduceCoordinator:
             reducer_queues.append(input_queue)
 
             reducers.append(
-                Reducer.options(max_concurrency=2).remote(
+                Reducer.options(name = f"reducer-{i}", max_concurrency=2).remote(
                     self.reducer,
                     f"reducer-{i}",
                     "coordinator",
@@ -61,7 +61,7 @@ class MapReduceCoordinator:
             )
 
         mappers = [
-            Mapper.remote(
+            Mapper.options(name = f"mapper-{i}").remote(
                 self.mapper,
                 f"mapper-{i}",
                 "coordinator",

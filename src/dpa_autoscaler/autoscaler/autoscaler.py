@@ -24,12 +24,21 @@ class AutoScaler:
         if mapper_id not in self.mapper_ids:
             self.mapper_ids.append(mapper_id)
 
-    def update_reducer_state(self, reducer_id, state, *args):
-        self.reducer_state[reducer_id] = state
-        print(self.reducer_state)
-
-    def autoscale(self, reducer_id, *args):
-        pass
+    def update_reducer_state(self, reducer_id, queue_size, *args):
+        self.reducer_state[reducer_id] = queue_size
+        if queue_size > self.threshold:
+            node_idx = reducer_id.split("-")[-1]
+            # self.autoscale(reducer_id=reducer_id)
+            self.ch.halve_tokens_for_node(node_idx=node_idx)
+        # print(self.reducer_state)
+    def key_lookup(self, key):
+        return self.ch.key_lookup(
+            key
+        )
+    # def autoscale(self,node_idx):
+    #     for mapper_id in self.mapper_ids:
+    #         mapper = ray.get_actor(mapper_id)
+    #         mapper.reschedule_output(node_idx=node_idx)
 
     def autoscaler_state(self):
-        return (self.actor_state, self.reducer_ids, self.mapper_ids)
+        return (self.reducer_state, self.reducer_ids, self.mapper_ids)

@@ -36,9 +36,10 @@ class Mapper:
 
             if data is not None:
                 output = self.mapper(data)
-                idx = self.ch.key_lookup(
-                    output
-                )  # hash(output) % len(self.reducer_queues)
+                if self.autoscale:
+                    idx = self.autoscaler.key_lookup.remote(output)
+                else:
+                    idx = hash(output) % len(self.reducer_queues)
                 self.reducer_queues[idx].put(output)
             else:
                 break
@@ -48,8 +49,8 @@ class Mapper:
 
         self.done = True
 
-    def reschedule_output(self, node_idx, num_tokens):
-        self.ch.update(node_idx, num_tokens)
+    def reschedule_output(self, node_idx):
+        self.ch.halve_tokens_for_node(node_idx=node_idx)
 
     def done(self):
         return self.done
