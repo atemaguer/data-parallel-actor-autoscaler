@@ -16,6 +16,8 @@ NUM_REDUCERS = 10
 out_queue = Queue()
 reduce_func = reducer()
 
+AutoScaler.options(name="autoscaler").remote(NUM_REDUCERS)
+
 coord = MapReduceCoordinator.options(name="coordinator").remote(
     data, NUM_MAPPERS, NUM_REDUCERS, map_func, reduce_func, out_queue, autoscale=True
 )

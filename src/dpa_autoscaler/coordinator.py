@@ -40,8 +40,6 @@ class MapReduceCoordinator:
         self.autoscale = autoscale
 
     def run(self):
-        if self.autoscale:
-            ray.get(AutoScaler.options(name="autoscaler").remote(self.num_reducers))
 
         reducers = []
         reducer_queues = []
