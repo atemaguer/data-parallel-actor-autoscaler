@@ -14,7 +14,7 @@ class AutoScaler:
         self.reducer_ids = []
         self.mapper_ids = []
         self.ch = ConsistentHashing(nodes=num_reducers)
-        self.threshold = 100
+        self.threshold = 300
 
     def register_reducer(self, reducer_id, *args):
         if reducer_id not in self.reducer_ids:
@@ -26,11 +26,14 @@ class AutoScaler:
 
     def update_reducer_state(self, reducer_id, queue_size, *args):
         self.reducer_state[reducer_id] = queue_size
+        # print(f"queue size for reducer_id {reducer_id} is {queue_size}")
         if queue_size > self.threshold:
-            node_idx = reducer_id.split("-")[-1]
+            node_idx = int(reducer_id.split("-")[-1])
             # self.autoscale(reducer_id=reducer_id)
+            print(f"halving tokens for {node_idx}")
             self.ch.halve_tokens_for_node(node_idx=node_idx)
         # print(self.reducer_state)
+
     def key_lookup(self, key):
         return self.ch.key_lookup(
             key

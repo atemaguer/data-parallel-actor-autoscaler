@@ -25,8 +25,8 @@ class Mapper:
         self.autoscale = autoscale
 
         if self.autoscale:
-            autoscaler = ray.get_actor("autoscaler")
-            autoscaler.register_mapper.remote(self.name)
+            self.autoscaler = ray.get_actor("autoscaler")
+            self.autoscaler.register_mapper.remote(self.name)
 
     def process(self):
         coordinator = ray.get_actor(self.coordinator_name)
@@ -37,7 +37,7 @@ class Mapper:
             if data is not None:
                 output = self.mapper(data)
                 if self.autoscale:
-                    idx = self.autoscaler.key_lookup.remote(output)
+                    idx = ray.get(self.autoscaler.key_lookup.remote(output))
                 else:
                     idx = hash(output) % len(self.reducer_queues)
                 self.reducer_queues[idx].put(output)
@@ -112,7 +112,7 @@ class Reducer:
             self.autoscaler.update_reducer_state.remote(
                 self.name, self.input_queue.size()
             )
-            time.sleep(0.1)
+            time.sleep(5)
 
     def done(self):
         return self.done

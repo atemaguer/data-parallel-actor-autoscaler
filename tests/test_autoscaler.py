@@ -1,5 +1,6 @@
 import time
 import ray
+import collections
 
 from ray.util.queue import Queue
 
@@ -27,4 +28,12 @@ ray.get(coord.run.remote())
 while not ray.get(coord.is_done.remote()):
     time.sleep(5)
 
-print(ray.get(autoscaler.autoscaler_state.remote()))
+# print(ray.get(autoscaler.autoscaler_state.remote()))
+print(f"Running time is: {ray.get(coord.running_time.remote())}")
+
+d = collections.defaultdict(int)
+while not out_queue.empty():
+    for k, v in out_queue.get().items():
+        d[k] += v
+print(len(d))
+print(d)
