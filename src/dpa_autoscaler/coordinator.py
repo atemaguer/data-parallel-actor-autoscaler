@@ -46,15 +46,16 @@ class MapReduceCoordinator:
 
         for i in range(self.num_reducers):
             input_queue = Queue()
-
             reducer_queues.append(input_queue)
-
+        
+        for i in range(self.num_reducers):
             reducers.append(
                 Reducer.options(name = f"reducer-{i}", max_concurrency=1).remote(
                     self.reducer,
                     f"reducer-{i}",
                     "coordinator",
-                    input_queue,
+                    reducer_queues[i],
+                    reducer_queues,
                     self.output_queue,
                     autoscale=self.autoscale,
                 )

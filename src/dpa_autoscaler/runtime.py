@@ -64,13 +64,16 @@ class Reducer:
         name,
         coordinator_name,
         input_queue,
+        other_reducer_input_queues,
         output_queue,
         autoscale=False,
         *args,
     ):
         self.reducer = reducer
         self.name = name
+        self.id = int(name.split("-")[1])
         self.input_queue = input_queue
+        self.reducer_queues = other_reducer_input_queues
         self.output_queue = output_queue
         self.coordinator_name = coordinator_name
         self.autoscale = autoscale
@@ -94,6 +97,12 @@ class Reducer:
             data = self.input_queue.get()
             if data is None:
                 break
+            idx = ray.get(self.autoscaler.key_lookup.remote(data))
+            if idx != self.id:
+                print("forwarding")
+                self.reducer_queues[idx].put(data)
+                continue
+                
             output = self.reducer.execute(data)
             if output is not None:
                 self.output_queue.put(output)
@@ -109,6 +118,7 @@ class Reducer:
 
     def update_auto_scaler_state(self):
         while True:
+            print("updating autoscaler:", self.input_queue.size())
             self.autoscaler.update_reducer_state.remote(
                 self.name, self.input_queue.size()
             )

@@ -12,7 +12,7 @@ from dpa_autoscaler.autoscaler import AutoScaler
 ray.init(ignore_reinit_error=True)
 
 NUM_MAPPERS = 4
-NUM_REDUCERS = 10
+NUM_REDUCERS = 4
 
 out_queue = Queue()
 reduce_func = reducer()
