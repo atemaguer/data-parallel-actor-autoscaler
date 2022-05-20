@@ -4,7 +4,7 @@ import time
 import ray
 
 from dpa_autoscaler.allocation import ConsistentHashing
-
+from ray.util.queue import Empty
 
 class Node:
     def __init__(self):
@@ -87,31 +87,38 @@ class Reducer:
         coordinator = ray.get_actor(self.coordinator_name)
         counter = 0
         while True:
-
-            data = self.input_queue.get()
-            if data is None:
-                ray.get(coordinator.increment_none_count.remote())
+            try:
+                data = self.input_queue.get(block=False)
+            except Empty:
+                if ray.get(coordinator.can_die.remote()):
+                    print("reducer dying")
+                    break
                 continue
+                
+
             counter += 1
             if counter % 100 == 0 and self.autoscale:
                 self.update_auto_scaler_state()
-            if self.autoscale:
+            if self.autoscale and data is not None:
                 idx = ray.get(self.autoscaler.key_lookup.remote(data))
                 if idx != self.id:
                     print("forwarding")
                     try:
+                        print("before ",self.reducer_queues[idx].size())
                         self.reducer_queues[idx].put(data)
+                        print("after ",self.reducer_queues[idx].size())
                     except:
                         print(data)
                         raise Exception
                     continue
                 
+            if data is None:
+                ray.get(coordinator.increment_none_count.remote())
+                continue
             output = self.reducer.execute(data)
             if output is not None:
                 self.output_queue.put(output)
-            if ray.get(coordinator.can_die.remote()):
-                print("reducer dying")
-                break
+
 
                 
 

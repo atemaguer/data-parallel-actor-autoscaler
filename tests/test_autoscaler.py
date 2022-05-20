@@ -20,7 +20,7 @@ reduce_func = reducer()
 autoscaler = AutoScaler.options(name="autoscaler").remote(NUM_REDUCERS)
 
 coord = MapReduceCoordinator.options(name="coordinator").remote(
-    data, NUM_MAPPERS, NUM_REDUCERS, map_func, reduce_func, out_queue, autoscale=False
+    data, NUM_MAPPERS, NUM_REDUCERS, map_func, reduce_func, out_queue, autoscale=True
 )
 
 ray.get(coord.run.remote())
