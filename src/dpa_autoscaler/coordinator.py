@@ -41,6 +41,8 @@ class MapReduceCoordinator:
         self.counter = 0
         self.counter_lock = Lock()
 
+        self.reducer_queues = []
+
     def increment_none_count(self):
         self.counter_lock.acquire()
         self.counter += 1
@@ -48,12 +50,13 @@ class MapReduceCoordinator:
         self.counter_lock.release()
 
     def can_die(self):
-        return self.counter == self.num_mappers * self.num_reducers
+        sizes = [i.size() for i in self.reducer_queues]
+        return (self.counter == self.num_mappers * self.num_reducers) and (sum(sizes) == 0)
 
     def run(self):
 
         reducers = []
-        reducer_queues = []
+        reducer_queues = self.reducer_queues
 
         for i in range(self.num_reducers):
             input_queue = Queue()
