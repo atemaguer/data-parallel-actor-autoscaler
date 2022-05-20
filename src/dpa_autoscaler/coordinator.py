@@ -5,7 +5,7 @@ from ray.util.queue import Queue
 
 from dpa_autoscaler.runtime import Mapper, Reducer
 from dpa_autoscaler.autoscaler import AutoScaler
-
+from threading import Lock
 
 @ray.remote
 class MapReduceCoordinator:
@@ -38,6 +38,17 @@ class MapReduceCoordinator:
         self.output_queue = output_queue
 
         self.autoscale = autoscale
+        self.counter = 0
+        self.counter_lock = Lock()
+
+    def increment_none_count(self):
+        self.counter_lock.acquire()
+        self.counter += 1
+        print(self.counter)
+        self.counter_lock.release()
+
+    def can_die(self):
+        return self.counter == self.num_mappers * self.num_reducers
 
     def run(self):
 
