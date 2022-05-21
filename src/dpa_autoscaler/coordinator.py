@@ -4,7 +4,6 @@ import time
 from ray.util.queue import Queue
 
 from dpa_autoscaler.runtime import Mapper, Reducer
-from dpa_autoscaler.autoscaler import AutoScaler
 
 
 @ray.remote
@@ -50,7 +49,7 @@ class MapReduceCoordinator:
             reducer_queues.append(input_queue)
 
             reducers.append(
-                Reducer.options(name = f"reducer-{i}", max_concurrency=1).remote(
+                Reducer.options(name=f"reducer-{i}", max_concurrency=1).remote(
                     self.reducer,
                     f"reducer-{i}",
                     "coordinator",
@@ -61,7 +60,7 @@ class MapReduceCoordinator:
             )
 
         mappers = [
-            Mapper.options(name = f"mapper-{i}").remote(
+            Mapper.options(name=f"mapper-{i}").remote(
                 self.mapper,
                 f"mapper-{i}",
                 "coordinator",

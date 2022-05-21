@@ -1,25 +1,22 @@
 import time
+import collections
 
 
-def map_func(input):
-    return input
+def map_func(x):
+    return x
 
 
-def reduce_func(input):
-    return input
+def reduce_func(x):
+    return x
 
 
-class reducer:
+class Reducer:
     def __init__(self):
-        self.state = {}
+        self.state = collections.defaultdict(int)
 
     def execute(self, element):
-        if element in self.state:
-            time.sleep(0.5)
-            self.state[element] += 1
-        else:
-            time.sleep(0.5)
-            self.state[element] = 1
+        time.sleep(3)
+        self.state[element] += 1
 
     def done(self):
         # print(self.state)

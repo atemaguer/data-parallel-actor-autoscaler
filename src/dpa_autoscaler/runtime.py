@@ -30,7 +30,7 @@ class Mapper:
 
     def process(self):
         coordinator = ray.get_actor(self.coordinator_name)
-
+        cnt = 0
         while True:
             data = ray.get(coordinator.mapper_input.remote())
 
@@ -41,6 +41,10 @@ class Mapper:
                 else:
                     idx = hash(output) % len(self.reducer_queues)
                 self.reducer_queues[idx].put(output)
+                cnt += 1
+                # if cnt % 10 == 0:
+                #    print('hi')
+                time.sleep(0.1)
             else:
                 break
 
@@ -112,7 +116,7 @@ class Reducer:
             self.autoscaler.update_reducer_state.remote(
                 self.name, self.input_queue.size()
             )
-            time.sleep(5)
+            time.sleep(2)
 
     def done(self):
         return self.done

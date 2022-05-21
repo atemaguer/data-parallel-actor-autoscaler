@@ -2,7 +2,7 @@
 MMH3_HASH_SEED = 0
 TOKENS_INITIAL = 1 << 6  # 64
 
-NUM_REPEATS = 100
+NUM_REPEATS = 10
 
 data = [
     "a",
