@@ -1,7 +1,7 @@
 import time
 import ray
 import collections
-
+import sys
 from ray.util.queue import Queue
 
 from dpa_autoscaler.coordinator import MapReduceCoordinator
@@ -20,7 +20,7 @@ reduce_func = reducer()
 autoscaler = AutoScaler.options(name="autoscaler").remote(NUM_REDUCERS)
 
 coord = MapReduceCoordinator.options(name="coordinator").remote(
-    data, NUM_MAPPERS, NUM_REDUCERS, map_func, reduce_func, out_queue, autoscale=False
+    data, NUM_MAPPERS, NUM_REDUCERS, map_func, reduce_func, out_queue, autoscale=(int(sys.argv[1]) == 0)
 )
 
 ray.get(coord.run.remote())
@@ -33,7 +33,9 @@ print(f"Running time is: {ray.get(coord.running_time.remote())}")
 
 d = collections.defaultdict(int)
 while not out_queue.empty():
-    for k, v in out_queue.get().items():
+    out = out_queue.get()
+    print(out)
+    for k, v in out.items():
         d[k] += v
 print(len(d))
 print(d)
