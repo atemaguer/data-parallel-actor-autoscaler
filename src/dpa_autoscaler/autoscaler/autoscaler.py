@@ -27,7 +27,7 @@ class AutoScaler:
     def update_reducer_state(self, reducer_id, queue_size, *args):
         self.reducer_state[reducer_id] = queue_size
         # print(f"queue size for reducer_id {reducer_id} is {queue_size}")
-        if queue_size > self.threshold:
+        if queue_size > min(self.reducer_state.values()) * 2 + 100:
             node_idx = int(reducer_id.split("-")[-1])
             # self.autoscale(reducer_id=reducer_id)
             print(f"halving tokens for {node_idx}")

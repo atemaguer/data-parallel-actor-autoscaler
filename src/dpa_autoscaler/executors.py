@@ -15,10 +15,10 @@ class reducer:
 
     def execute(self, element):
         if element in self.state:
-            time.sleep(0.5)
+            time.sleep(0.1)
             self.state[element] += 1
         else:
-            time.sleep(0.5)
+            time.sleep(0.1)
             self.state[element] = 1
 
     def done(self):
