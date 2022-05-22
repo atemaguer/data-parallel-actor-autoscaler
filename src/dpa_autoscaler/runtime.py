@@ -23,10 +23,9 @@ class Mapper:
         self.done = False
         self.ch = ConsistentHashing(nodes=len(self.reducer_queues))
         self.autoscale = autoscale
-
-        if self.autoscale:
-            self.autoscaler = ray.get_actor("autoscaler")
-            self.autoscaler.register_mapper.remote(self.name)
+        
+        self.autoscaler = ray.get_actor("autoscaler")
+        self.autoscaler.register_mapper.remote(self.name)
 
     def process(self):
         coordinator = ray.get_actor(self.coordinator_name)
@@ -36,10 +35,7 @@ class Mapper:
 
             if data is not None:
                 output = self.mapper(data)
-                if self.autoscale:
-                    idx = ray.get(self.autoscaler.key_lookup.remote(output))
-                else:
-                    idx = hash(output) % len(self.reducer_queues)
+                idx = ray.get(self.autoscaler.key_lookup.remote(output))
                 self.reducer_queues[idx].put(output)
             else:
                 break
@@ -97,7 +93,7 @@ class Reducer:
                 
 
             counter += 1
-            if counter % 100 == 0 and self.autoscale:
+            if counter % 20 == 0 and self.autoscale:
                 self.update_auto_scaler_state()
             if self.autoscale and data is not None:
                 idx = ray.get(self.autoscaler.key_lookup.remote(data))
