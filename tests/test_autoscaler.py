@@ -6,21 +6,31 @@ from ray.util.queue import Queue
 
 from dpa_autoscaler.coordinator import MapReduceCoordinator
 from dpa_autoscaler.config import data
-from dpa_autoscaler.executors import map_func, reduce_func, reducer
+from dpa_autoscaler.executors import map_func, Reducer
 from dpa_autoscaler.autoscaler import AutoScaler
 
 ray.init(ignore_reinit_error=True)
 
 NUM_MAPPERS = 4
 NUM_REDUCERS = 4
+CH_TYPE = "halving"  # the other option is "doubling"
 
 out_queue = Queue()
-reduce_func = reducer()
+reduce_func = Reducer()
 
-autoscaler = AutoScaler.options(name="autoscaler").remote(NUM_REDUCERS)
+autoscaler = AutoScaler.options(name="autoscaler").remote(
+    num_reducers=NUM_REDUCERS, ch_type=CH_TYPE
+)
 
 coord = MapReduceCoordinator.options(name="coordinator").remote(
-    data, NUM_MAPPERS, NUM_REDUCERS, map_func, reduce_func, out_queue, autoscale=(int(sys.argv[1]) == 0)
+    data,
+    NUM_MAPPERS,
+    NUM_REDUCERS,
+    map_func,
+    reduce_func,
+    out_queue,
+    ch_type=CH_TYPE,
+    autoscale=(int(sys.argv[1]) == 0),
 )
 
 ray.get(coord.run.remote())

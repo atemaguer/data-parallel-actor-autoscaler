@@ -9,10 +9,10 @@ def reduce_func(input):
     return input
 
 
-class reducer:
+class Reducer:
     def __init__(self):
         self.state = {}
-        self.processed= 0
+        self.processed = 0
 
     def execute(self, element):
         print(self.processed)

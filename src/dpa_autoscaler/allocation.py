@@ -137,3 +137,28 @@ class ConsistentHashing:
     @property
     def total_tokens(self) -> int:
         return sum(self.node_tokens.values())
+
+
+class ConsistentHashingDouble(ConsistentHashing):
+    def __init__(
+        self,
+        nodes: int,
+        seed: int = config.MMH3_HASH_SEED,
+    ):
+        super().__init__(nodes=nodes, seed=seed, tokens_initial=1)
+
+    def halve_tokens_for_node(self, node_idx: int) -> bool:
+        """
+        This is a convenience method to halve the tokens for a given node index.
+        If an overwhelmed node is detected you can use this method to unburden the node,
+        which is more convenient than bumping the tokens for all the other nodes.
+        What does it actually do? It doubles the tokens for all nodes except for `node_idx`.
+        This approach will lead to some unnecessary churn.
+        We'll introduce a lot of "virtual nodes" which may result in some shuffling of keys between nodes.
+        """
+        node_tokens = {
+            idx: (1 if idx == node_idx else 2) * tokens
+            for idx, tokens in self.node_tokens.items()
+        }
+        self.update_batch(node_tokens=node_tokens)
+        return True

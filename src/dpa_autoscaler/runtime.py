@@ -1,10 +1,8 @@
-import threading
-import time
-
 import ray
 
-from dpa_autoscaler.allocation import ConsistentHashing
+from dpa_autoscaler.allocation import ConsistentHashing, ConsistentHashingDouble
 from ray.util.queue import Empty
+
 
 class Node:
     def __init__(self):
@@ -14,16 +12,24 @@ class Node:
 @ray.remote
 class Mapper:
     def __init__(
-        self, mapper, name, coordinator_name, reducer_queues, autoscale=False, *args
+        self,
+        mapper,
+        name,
+        coordinator_name,
+        reducer_queues,
+        ch_type="halving",
+        autoscale=False,
+        *args,
     ):
         self.mapper = mapper
         self.name = name
         self.reducer_queues = reducer_queues
         self.coordinator_name = coordinator_name
         self.done = False
-        self.ch = ConsistentHashing(nodes=len(self.reducer_queues))
+        ch_cls = ConsistentHashing if ch_type == "halving" else ConsistentHashingDouble
+        self.ch = ch_cls(nodes=len(self.reducer_queues))
         self.autoscale = autoscale
-        
+
         self.autoscaler = ray.get_actor("autoscaler")
         self.autoscaler.register_mapper.remote(self.name)
 
@@ -90,7 +96,6 @@ class Reducer:
                     print("reducer dying")
                     break
                 continue
-                
 
             counter += 1
             if counter % 20 == 0 and self.autoscale:
@@ -100,14 +105,14 @@ class Reducer:
                 if idx != self.id:
                     print("forwarding")
                     try:
-                        print("before ",self.reducer_queues[idx].size())
+                        print("before ", self.reducer_queues[idx].size())
                         self.reducer_queues[idx].put(data)
-                        print("after ",self.reducer_queues[idx].size())
+                        print("after ", self.reducer_queues[idx].size())
                     except:
                         print(data)
                         raise Exception
                     continue
-                
+
             if data is None:
                 ray.get(coordinator.increment_none_count.remote())
                 continue
@@ -115,14 +120,11 @@ class Reducer:
             if output is not None:
                 self.output_queue.put(output)
 
-
-                
-
         output = self.reducer.done()
         if output is not None:
             self.output_queue.put(output)
 
-        #self.input_queue.shutdown()
+        # self.input_queue.shutdown()
 
         coordinator.register_reducer.remote()
         self.done = True

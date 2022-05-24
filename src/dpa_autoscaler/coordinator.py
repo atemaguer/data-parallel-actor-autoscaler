@@ -4,8 +4,8 @@ import time
 from ray.util.queue import Queue
 
 from dpa_autoscaler.runtime import Mapper, Reducer
-from dpa_autoscaler.autoscaler import AutoScaler
 from threading import Lock
+
 
 @ray.remote
 class MapReduceCoordinator:
@@ -17,6 +17,7 @@ class MapReduceCoordinator:
         mapper,
         reducer,
         output_queue,
+        ch_type="halving",
         autoscale=False,
     ):
         self.input_data = input_data
@@ -38,6 +39,7 @@ class MapReduceCoordinator:
         self.output_queue = output_queue
 
         self.autoscale = autoscale
+        self.ch_type = ch_type
         self.counter = 0
         self.counter_lock = Lock()
 
@@ -51,7 +53,9 @@ class MapReduceCoordinator:
 
     def can_die(self):
         sizes = [i.size() for i in self.reducer_queues]
-        return (self.counter == self.num_mappers * self.num_reducers) and (sum(sizes) == 0)
+        return (self.counter == self.num_mappers * self.num_reducers) and (
+            sum(sizes) == 0
+        )
 
     def run(self):
 
@@ -61,10 +65,10 @@ class MapReduceCoordinator:
         for i in range(self.num_reducers):
             input_queue = Queue()
             reducer_queues.append(input_queue)
-        
+
         for i in range(self.num_reducers):
             reducers.append(
-                Reducer.options(name = f"reducer-{i}", max_concurrency=1).remote(
+                Reducer.options(name=f"reducer-{i}", max_concurrency=1).remote(
                     self.reducer,
                     f"reducer-{i}",
                     "coordinator",
@@ -76,11 +80,12 @@ class MapReduceCoordinator:
             )
 
         mappers = [
-            Mapper.options(name = f"mapper-{i}").remote(
+            Mapper.options(name=f"mapper-{i}").remote(
                 self.mapper,
                 f"mapper-{i}",
                 "coordinator",
                 reducer_queues,
+                ch_type=self.ch_type,
                 autoscale=self.autoscale,
             )
             for i in range(self.num_mappers)
