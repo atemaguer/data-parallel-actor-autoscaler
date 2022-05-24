@@ -16,7 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("--doubling", action="store_true")
     args = parser.parse_args()
     autoscale = args.autoscale
-    ch_type = "doubling" if args.double else "halving"
+    ch_type = "doubling" if args.doubling else "halving"
     print(f"Running with autoscale={autoscale} and consistent hashing type={ch_type}")
 
     ray.init(ignore_reinit_error=True)
