@@ -1,5 +1,5 @@
 import ray
-from dpa_autoscaler.allocation import ConsistentHashing
+from dpa_autoscaler.allocation import ConsistentHashing, ConsistentHashingDouble
 
 
 class AutoScalingPolicy:
@@ -9,11 +9,12 @@ class AutoScalingPolicy:
 
 @ray.remote
 class AutoScaler:
-    def __init__(self, num_reducers, *args):
+    def __init__(self, num_reducers, ch_type="halving", *args):
         self.reducer_state = {}
         self.reducer_ids = []
         self.mapper_ids = []
-        self.ch = ConsistentHashing(nodes=num_reducers)
+        ch_cls = ConsistentHashing if ch_type == "halving" else ConsistentHashingDouble
+        self.ch = ch_cls(nodes=num_reducers)
         self.threshold = 300
         self.autoscaled = False
 
@@ -39,9 +40,8 @@ class AutoScaler:
         # print(self.reducer_state)
 
     def key_lookup(self, key):
-        return self.ch.key_lookup(
-            key
-        )
+        return self.ch.key_lookup(key)
+
     # def autoscale(self,node_idx):
     #     for mapper_id in self.mapper_ids:
     #         mapper = ray.get_actor(mapper_id)
