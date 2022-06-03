@@ -130,7 +130,9 @@ class Reducer:
         self.done = True
 
     def update_auto_scaler_state(self):
-        print("updating autoscaler:", self.input_queue.size())
+        print(
+            f"triggering load balancing from reducer id={self.id} with queue size={self.input_queue.size()}..."
+        )
         self.autoscaler.update_reducer_state.remote(self.name, self.input_queue.size())
 
     def done(self):
