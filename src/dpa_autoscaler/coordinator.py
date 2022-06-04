@@ -48,7 +48,7 @@ class MapReduceCoordinator:
     def increment_none_count(self):
         self.counter_lock.acquire()
         self.counter += 1
-        print(self.counter)
+        # print("x", self.counter)
         self.counter_lock.release()
 
     def can_die(self):

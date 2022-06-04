@@ -44,7 +44,7 @@ class AutoScaler:
         ):
             node_idx = int(reducer_id.split("-")[-1])
             # self.autoscale(reducer_id=reducer_id)
-            print(f"updating tokens for node_id={node_idx}")
+            print(f"load balancer triggered! updating tokens for node_id={node_idx}")
             self.ch.halve_tokens_for_node(node_idx=node_idx)
             self.reducer_triggers[reducer_id] += 1
         # print(self.reducer_state)
