@@ -149,3 +149,29 @@ data = [
     "y",
     "z",
 ] * 10
+
+
+def wl4_gen():
+    r1 = ["o", "u"]
+    r2 = ["f", "h", "j", "w"]
+    out = r1 * 20
+    out += r2 * 10
+    out += [l for l in string.ascii_lowercase if l not in out]
+    assert len(out) == 100
+    return out
+
+
+wl1 = ["a", "b", "c", "f"] * 25
+wl2 = ["a", "g", "i", "q"] * 25
+wl3 = ["a"] * 100
+wl4 = wl4_gen()
+wl5 = list(string.ascii_lowercase[:25] * 4)
+
+
+WORKLOADS = dict(
+    wl1=wl1,
+    wl2=wl2,
+    wl3=wl3,
+    wl4=wl4,
+    wl5=wl5,
+)

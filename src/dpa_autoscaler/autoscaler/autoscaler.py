@@ -1,3 +1,4 @@
+import collections
 import ray
 from dpa_autoscaler.allocation import ConsistentHashing, ConsistentHashingDouble
 
@@ -9,14 +10,16 @@ class AutoScalingPolicy:
 
 @ray.remote
 class AutoScaler:
-    def __init__(self, num_reducers, ch_type="halving", *args):
+    def __init__(self, num_reducers, ch_type="halving", threshold=0.2, rounds=1, *args):
         self.reducer_state = {}
+        self.reducer_hits = collections.defaultdict(int)
+        self.reducer_triggers = collections.defaultdict(int)
         self.reducer_ids = []
         self.mapper_ids = []
         ch_cls = ConsistentHashing if ch_type == "halving" else ConsistentHashingDouble
         self.ch = ch_cls(nodes=num_reducers)
-        self.threshold = 300
-        self.autoscaled = False
+        self.threshold = threshold
+        self.rounds = rounds
 
     def register_reducer(self, reducer_id, *args):
         if reducer_id not in self.reducer_ids:
@@ -27,16 +30,23 @@ class AutoScaler:
             self.mapper_ids.append(mapper_id)
 
     def update_reducer_state(self, reducer_id, queue_size, *args):
+        self.reducer_hits[reducer_id] += 1
+        hits = self.reducer_hits[reducer_id]
         self.reducer_state[reducer_id] = queue_size
         # print(f"queue size for reducer_id {reducer_id} is {queue_size}")
-        if self.autoscaled:
+        if self.reducer_triggers[reducer_id] > self.rounds:
             return
-        if queue_size > min(self.reducer_state.values()) * 2 + 100:
+        first = len(self.reducer_state) == 1
+        if first and hits == 1:
+            return
+        if first or queue_size > sorted(self.reducer_state.values())[-2] * (
+            1 + self.threshold
+        ):
             node_idx = int(reducer_id.split("-")[-1])
             # self.autoscale(reducer_id=reducer_id)
-            print(f"halving tokens for {node_idx}")
+            print(f"load balancer triggered! updating tokens for node_id={node_idx}")
             self.ch.halve_tokens_for_node(node_idx=node_idx)
-            self.autoscaled = True
+            self.reducer_triggers[reducer_id] += 1
         # print(self.reducer_state)
 
     def key_lookup(self, key):
@@ -48,4 +58,4 @@ class AutoScaler:
     #         mapper.reschedule_output(node_idx=node_idx)
 
     def autoscaler_state(self):
-        return (self.reducer_state, self.reducer_ids, self.mapper_ids)
+        return self.reducer_state, self.reducer_ids, self.mapper_ids

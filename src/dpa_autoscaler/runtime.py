@@ -93,7 +93,7 @@ class Reducer:
                 data = self.input_queue.get(block=False)
             except Empty:
                 if ray.get(coordinator.can_die.remote()):
-                    print("reducer dying")
+                    # print("reducer dying")
                     break
                 continue
 
@@ -103,11 +103,11 @@ class Reducer:
             if self.autoscale and data is not None:
                 idx = ray.get(self.autoscaler.key_lookup.remote(data))
                 if idx != self.id:
-                    print("forwarding")
+                    print(f"forwarding message from reducer {self.id} to {idx}")
                     try:
-                        print("before ", self.reducer_queues[idx].size())
+                        # print("before ", self.reducer_queues[idx].size())
                         self.reducer_queues[idx].put(data)
-                        print("after ", self.reducer_queues[idx].size())
+                        # print("after ", self.reducer_queues[idx].size())
                     except:
                         print(data)
                         raise Exception
@@ -130,7 +130,9 @@ class Reducer:
         self.done = True
 
     def update_auto_scaler_state(self):
-        print("updating autoscaler:", self.input_queue.size())
+        print(
+            f"checking load balancing policy for reducer id={self.id} with queue size={self.input_queue.size()}..."
+        )
         self.autoscaler.update_reducer_state.remote(self.name, self.input_queue.size())
 
     def done(self):

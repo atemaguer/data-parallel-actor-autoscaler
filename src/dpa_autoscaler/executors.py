@@ -15,7 +15,7 @@ class Reducer:
         self.processed = 0
 
     def execute(self, element):
-        print(self.processed)
+        print("processed so far:", self.processed)
         if element in self.state:
             time.sleep(0.2)
             self.state[element] += 1
